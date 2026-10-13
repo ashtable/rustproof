@@ -72,7 +72,7 @@ Launch a new opus-engineer subagent to:
 - Implement the recommended revisions to the ./design-docs/design-delta.md that were deemed to be both valid and necessary in (Step 7).
 
 
-### Plan the Cross-Project Implemenation
+### Plan the Implementation (for the current mono-repo only)
 
 
 #### (Step 10) - Create the implementation plan
