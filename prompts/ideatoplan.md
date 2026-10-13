@@ -5,8 +5,8 @@ The following prompt is used to turn an idea or initial mockup specified by the 
 
 ## Code Locations
 
-- ./ - The "rustproof-platform" mono-repo (private repo)  
-- ../rustproof - The rustproof Claude Plugin & rustproof CLI mono-repo (public, Apache 2.0 repo)
+- ./ - The rustproof Claude Plugin & rustproof CLI mono-repo (public, Apache 2.0 repo)
+- ../rustproof-platform/ - The "rustproof-platform" mono-repo (private repo)  
 
 ## Design Docs & Implementation Plan
 
@@ -15,7 +15,7 @@ The following prompt is used to turn an idea or initial mockup specified by the 
 #### (Step 1) - Review the current code
 Launch a separate, new sonnet-engineer subagent to explore and summarize the contents of each of the following directories for a subsequent subagent in the ./scratch/ directory:
 - ./
-- ../rustproof/
+- ../rustproof-platform/
 
 
 #### (Step 2) - Document Current Design
@@ -36,7 +36,7 @@ Launch a new sonnet-engineer subagent to:
 #### (Step 4) - Design the Delta
 Launch a new opus-engineer subagent to:
 - Review the output of the (Step 2) and (Step 3) subagents
-- Assemble a design for the changes that need to be implemented to the current system (as per current-design.md) such that it would implement the user's requested feature(s). 
+- Assemble a design for the changes that need to be implemented (within the current mono-repo only) to the current system (as per current-design.md) such that it would implement the user's requested feature(s). 
 - Document this design in the ./design-docs/design-delta.md for a subsequent subagent (delete this file with permission if it exists).
 
 
@@ -78,5 +78,5 @@ Launch a new opus-engineer subagent to:
 #### (Step 10) - Create the implementation plan
 Launch a new opus-engineer subagent to:
 - Review the ./design-docs/current-design.md and ./design-docs/design-delta.md
-- Design a cross-project implementation plan with an ordered, numbered table of tasks that touches all of the impacted parts of this (./) current mono-repo necessary to implement the design in ./design-docs/design-delta.md 
-- Document the cross-project implementation plan within ./design-docs/plan.md 
+- Design an implementation plan specific to this current mono-repo with an ordered, numbered table of tasks that touches all of the impacted parts of this (./) current mono-repo necessary to implement the design in ./design-docs/design-delta.md 
+- Document the mono-repo implementation plan within ./design-docs/plan.md 

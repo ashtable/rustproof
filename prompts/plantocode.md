@@ -43,7 +43,7 @@ Launch a separate, new sonnet-engineer subagent to explore and summarize the con
 #### (Step 3) - Review the current state of the codebase 
 Launch a new sonnet-engineer subagent to review the code in each of the following directories from the perspectives of how it differs from the current-design.md, design-delta.md and plan.md; and the task(s) the user requested to have implemented. Record notes within the ./scratch/ directory for subsequent subagents:
 - ./
-- ../rustproof/
+- ../rustproof-platform/
 
 
 ### Cross-Project, TDD Implemenation
@@ -61,8 +61,6 @@ overall project
 Launch a new opus-engineer subagent to:
 - Review the output of the (Step 1), (Step 2), (Step 3) and (Step 4) subagents.
 - Use test-driven development with unit tests and Playwright end-to-end tests, as appropriate, to implement the TDD Plan assembled by the (Step 4) subagent 
-- The Dockerfile in the root repo and its docker compose should be pointed at the nested submodules, which should always have the latest dev code (though sometimes we'll need to bring containers down and back up to get new code running in there)
-- Commit the code and update submodule pointers, only as needed to get the code to pass tests
 
 
 #### (Step 6) - Commit the implementation
@@ -101,8 +99,6 @@ Launch a new sonnet-engineer subagent to:
 Launch a new opus-engineer subagent to:
 - Review the output of the (Step 1), (Step 2), (Step 3), (Step 4), (Step 5) and (Step 10) subagents.
 - Use test-driven development with unit tests and Playwright end-to-end tests, as appropriate, to implement the recommended revisions to the code and tests deemed both valid and necessary by the (Step 10) subagent.
-- The Dockerfile in the root repo and its docker compose should be pointed at the nested submodules, which should always have the latest dev code (though sometimes we'll need to bring containers down and back up to get new code running in there)
-- Commit the code and update submodule pointers, only as needed to get the code to pass tests
 
 
 #### (Step 12) - Commit the revisions
@@ -114,7 +110,7 @@ Launch a new sonnet-engineer subagent to:
 
 #### (Step 13) - Release all changes in GitHub
 Launch a new sonnet-engineer subagent to:
-- Finally, run any "release" (e.g. /release-nextjs, /release-fastapi, /release-database, /release-dbos-python, /release-root) necessary to release different parts of this mono-repo
+- Finally, run any applicable release process 
 
 ### Update the Implemenation Plan
 
