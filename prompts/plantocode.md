@@ -5,10 +5,10 @@ The following prompt is used to turn a set of design documents, implementation p
 
 ## Relevant Skills
 
-- Use the DBOS-python and DBOS-typescript skills, as applicable for any work involing DBOS workflows or DBOSClient SDKs
-- Use the frontend-design skill for any work on the Next.js UI in the rustproof-platform mono-repo, and the Claude Code Plugin Mod UI/rustproof-CLI UI
-- Use the playwright mcp server and skill as needed when designing, writing, running tests or verifying front-end functionality 
-- Use the chromdevtools mcp server as needed when designing, writing, running tests or verifying browser functionality 
+- Use the DBOS-python and DBOS-typescript skills for reference since there is not yet a DBOS-rust skill (for the very new DBOS Rust SDK: https://github.com/dbos-inc/dbos-transact-rust), as applicable for any work involing DBOS workflows or DBOSClient SDKs
+- Use the frontend-design skill as reference for UI work on the Claude Code Plugin Mod UI/rustproof-cli UI
+- Use the mcp-server-terminal mcp server as needed when designing or verifying front-end rustproof-cli functionality in the terminal (https://github.com/aybelatchane/mcp-server-terminal)
+- Use the "claude plugin eval", "claude plugin test" and "claude plugin validate" as needed when designing, writing, running tests or verifying the rustproof Claude Code Plugin/Mod functionality (https://code.claude.com/docs/en/plugins/mods/overview)
 
 
 ## Code Locations
