@@ -1,0 +1,8 @@
+{
+  "enabledPlugins": {
+    "code-review@anthropic-plugin-directory": true,
+    "superpowers@anthropic-plugin-directory": true,
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
+    "playwright@anthropic-plugin-directory": true
+  }
+}
