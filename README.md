@@ -1,2 +1,0 @@
-# rustproof
-Rust, with Proofs!
