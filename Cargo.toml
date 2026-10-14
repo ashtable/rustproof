@@ -1,0 +1,12 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "xtask"]
+exclude = ["examples"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+
+[profile.release]
+overflow-checks = true
