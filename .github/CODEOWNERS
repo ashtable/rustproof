@@ -1,0 +1,4 @@
+# Code owners. Advisory until a branch ruleset requires code-owner review.
+/crates/rustproof-core/ @ashtable
+/profiles/ @ashtable
+/schemas/ @ashtable

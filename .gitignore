@@ -6,3 +6,10 @@ scratch/*
 
 design-docs/*
 !design-docs/rustproof-spec.md
+
+# Build and tool output (delta §3.1)
+target/
+.rustproof/state/
+.rustproof/lean/.lake/
+node_modules/
+mutants.out*/
