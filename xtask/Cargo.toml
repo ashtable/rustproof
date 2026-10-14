@@ -4,3 +4,9 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
+
+[dependencies]
+toml = "1"
+
+[dev-dependencies]
+assert_cmd = "2.2"

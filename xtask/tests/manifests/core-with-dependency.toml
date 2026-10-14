@@ -1,0 +1,8 @@
+# A rustproof-core manifest that breaks the zero-dependency rule (delta §3.2 rule 1).
+[package]
+name = "rustproof-core"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+serde = "1"
