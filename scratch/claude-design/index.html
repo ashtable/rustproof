@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rustproof · prototype</title>
+<link rel="stylesheet" href="_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+.hub{max-width:960px;margin:0 auto;padding:64px 24px 96px;display:grid;gap:40px}
+.hero{display:grid;gap:12px}.hero p{max-width:60ch;color:var(--text-2)}
+.flows{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.flow{display:grid;gap:12px;align-content:start}.flow h2{font:var(--rp-type-h3);letter-spacing:var(--rp-track-h3)}.flow .who{font:var(--rp-type-small);color:var(--text-3)}
+.steps{display:grid;gap:2px}
+.stp{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text);text-decoration:none;border-radius:var(--radius-lg)}.stp:hover{border-color:var(--accent);text-decoration:none;color:var(--text)}.stp.off{opacity:.55;pointer-events:none}.stp b{width:24px;height:24px;border-radius:12px;border:1px solid var(--border-strong);display:grid;place-items:center;font:500 12px/1 var(--rp-font-mono);color:var(--text-2)}.stp .t{font:var(--rp-type-ui)}.stp .d{font:var(--rp-type-small);color:var(--text-3)}.stp .r{font:var(--rp-type-caption);color:var(--text-3);text-align:right}
+.legend{display:grid;gap:10px;padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface)}.legend .row{display:flex;flex-wrap:wrap;gap:8px 18px}.legend .st{font:var(--rp-type-small)}
+.try{display:grid;gap:6px;font:var(--rp-type-small);color:var(--text-2)}.try ol{margin:0;padding-left:20px;display:grid;gap:4px}
+</style>
+<script src="shared/rp.js"></script>
+</head>
+<body>
+<main class="hub">
+<section class="hero"><span class="wordmark"><i>∎</i>rustproof</span><h1 class="t-h1">Three lanes, one shared state.</h1><p>Round one of the rustproof surfaces. One shared state: approve a theorem anywhere and it moves from <span class="st" data-s="needs_review"><span class="g">◆</span>needs review</span> to <span class="st" data-s="searching"><span class="g">◌</span>searching</span> to <span class="st" data-s="proven"><span class="g">●</span>proven</span> everywhere else, including other open tabs.</p></section>
+<section class="flows">
+<div class="flow"><h2>The public</h2><div class="who">Potential customers, existing customers and investors on rustproof.dev.</div>
+<div class="steps"><a class="stp" href="public/index.html"><b>1</b><span><span class="t">Landing page</span><br><span class="d">Vibe code it. Prove it. Two autoplaying four-beat stories: Rust fib, and a FastAPI billing rule ported to proven Rust behind a guard.</span></span><span class="r">autoplay</span></a>
+<a class="stp" href="public/plugin.html"><b>2</b><span><span class="t">Product pages</span><br><span class="d">Plugin, GitHub, cloud, agent, bricks, Python inter-op, how it works, security, company. Install CTAs disabled until release.</span></span><span class="r">9 pages</span></a>
+<a class="stp" href="public/contact.html"><b>3</b><span><span class="t">Contact</span><br><span class="d">Form posting to api/contact.js, which sends via the Twilio Email API. Preview mode renders both emails.</span></span><span class="r">try it</span></a></div></div>
+<div class="flow"><h2>Developer in Claude Code</h2><div class="who">Jonas vibe-codes fib, gets nudged into the provable subset, reviews the theorem without leaving the terminal.</div>
+<div class="steps"><a class="stp" href="claude-code/mod.html"><b>1</b><span><span class="t">The mod</span><br><span class="d">Status band, /proofs pane, nudge, tool rows, toasts, heat map. Terminal, Desktop and fallback renderers.</span></span><span class="r">approve with <kbd class="kbd">a</kbd></span></a>
+<a class="stp" href="claude-code/cli.html"><b>2</b><span><span class="t">CLI output</span><br><span class="d">rustproof status, spec approve, events --follow. Monochrome.</span></span><span class="r">approve with <kbd class="kbd">y</kbd></span></a>
+<a class="stp" href="github/pr.html"><b>3</b><span><span class="t">GitHub</span><br><span class="d">Sticky PR comment, check runs, CODEOWNERS review. Markdown only.</span></span><span class="r">approve as Mara</span></a></div></div>
+<div class="flow"><h2>Team in the dashboard</h2><div class="who">Mara, CODEOWNER of .rustproof/specs, works the needs-you queue.</div>
+<div class="steps"><a class="stp" href="dashboard/spec-review.html"><b>1</b><span><span class="t">Spec review</span><br><span class="d">Before · After · Claim. New spec with a surfaced precondition; changed spec in diff mode.</span></span><span class="r">approve with <kbd class="kbd">A</kbd></span></a>
+<a class="stp off" href="#"><b>2</b><span><span class="t">Dashboard home, repo, run detail</span><br><span class="d">Next round.</span></span><span class="r"></span></a>
+<a class="stp off" href="#"><b>3</b><span><span class="t">Patch review, counterexample, agent, settings</span><br><span class="d">Next round.</span></span><span class="r"></span></a></div></div>
+</section>
+<section class="legend"><span class="t-caption up c3">Shared status vocabulary</span><div class="row"><span class="st" data-s="proven"><span class="g">●</span>Proven</span><span class="st" data-s="checking"><span class="g">◌</span>Checking / Searching</span><span class="st" data-s="needs_review"><span class="g">◆</span>Needs review</span><span class="st" data-s="failing"><span class="g">✕</span>Failing / Counterexample</span><span class="st" data-s="weak_spec"><span class="g">△</span>Weak spec</span><span class="st" data-s="stale"><span class="g">↻</span>Stale</span><span class="st" data-s="excluded"><span class="g">○</span>Excluded</span></div></section>
+<section class="try"><span class="t-caption up c3">Proto bar (bottom right of every page)</span><ol><li>Theme: dark titanium or light stainless.</li><li>Act as Jonas (developer) or Mara (code owner); copy and permissions follow.</li><li>Scenario: live, loading, empty, first run, error.</li><li>Notes: numbered handoff annotations on components.</li><li>Reset: clear approvals.</li></ol></section>
+</main>
+</body>
+</html>

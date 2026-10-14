@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Platform agent — rustproof</title>
+<meta name="description" content="One assistant in the dashboard that operates the platform.">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="site.css">
+<script src="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/_ds_bundle.js"></script>
+<script src="../shared/rp.js"></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main><section class="wrapx phero"><span class="eyebrow">Platform agent</span><h1>Explains, debugs and repairs. Never changes a spec.</h1><p>One assistant in the dashboard that knows the current repo, run or obligation. The same tools are exposed to outside agents over remote MCP and the CLI.</p><div class="ctas" style="margin-top:8px"><a class="btn btn-primary btn-lg" href="../dashboard/spec-review.html">Open the dashboard prototype</a><a class="btn btn-lg" href="contact.html">Talk to us</a></div></section><section class="sec "><div class="wrapx"><div class="sechead rv"><span class="num">01 / ITS JOBS</span><h2>What it does, and what it only proposes.</h2></div><div class="twocol"><div class="prose rv"><ul><li><strong>Explain why a proof fails</strong>, in plain language, with the counterexample.</li><li><strong>Propose spec changes</strong> (never apply them) and <strong>proof repairs</strong> (apply them).</li><li><strong>Explain a patch</strong>: which brick, why, and what the differential tests covered.</li><li><strong>Recommend what to prove next</strong>, ranked by how provable and how important a function is.</li><li><strong>Debug a failing run</strong>: extraction errors, unsupported Rust, cache misses.</li></ul></div>
+<div class="chat rv"><div class="m me"><b>You</b><p>Why is percent_bounded red?</p></div><div class="m"><b>rustproof agent · run_01HX4K</b><p>The claim is <code>r ≤ 100</code> whenever <code>done ≤ total</code>. The counterexample finder found <code>percent(42_949_673, 42_949_673)</code>: <code>done * 100</code> overflows u32 before the division, so the function fails inside its own precondition.</p><p>Three standard resolutions. Widening the intermediate to u64 keeps the theorem exactly as approved, so it needs no new review.</p><div class="acts"><span class="chip">Propose: widen intermediate to u64</span><span class="chip">Propose: precondition done ≤ 42_949_672</span><span class="chip">Open counterexample</span></div></div></div></div></div></section><section class="sec "><div class="wrapx"><div class="sechead rv"><span class="num">02 / SAME RULES AS EVERY SURFACE</span><h2>It has the build engineer’s authority, and no more.</h2><p>It can write and repair proofs, apply built-in bricks, and change caches and config. It cannot change a theorem, apply a custom brick, or move the proof boundary. Those are proposals, approved by a person.</p></div><div class="quote rv">Nothing checks a spec except a person.</div></div></section><section class="cta-band"><div class="wrapx" style="display:grid;gap:18px;justify-items:center"><h2>Ask it why.</h2><p>The agent is part of the dashboard for every repository that runs rustproof.</p><div class="ctas" style="margin:0;justify-content:center"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="contact.html">Request early access</a></div></div></section></main>
+<div id="site-footer"></div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python inter-op — rustproof</title>
+<meta name="description" content="Prove the Python backend by patching the build with a call into proven Rust.">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="site.css">
+<script src="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/_ds_bundle.js"></script>
+<script src="../shared/rp.js"></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+<script type="text/plain" id="src-py-before"># billing/prorate.py
+def prorate(amount_cents: int, days_used: int, days_in_period: int) -> int:
+    return amount_cents * days_used // days_in_period</script>
+<script type="text/plain" id="src-py-after">// .rustproof/crates/billing/src/lib.rs
+pub fn prorate(amount_cents: u64, days_used: u64, days_in_period: u64) -> u64 {
+    amount_cents * days_used / days_in_period
+}</script>
+<script type="text/plain" id="src-py-shim"># patched tree
+from rustproof_ext.billing import prorate as _prorate_rs
+
+def _prorate_ok(a: int, u: int, d: int) -> bool:          # generated from the approved spec
+    return 0 < d and 0 <= u <= d and 0 <= a and a * u <= 18_446_744_073_709_551_615
+
+def prorate(amount_cents: int, days_used: int, days_in_period: int) -> int:
+    if _prorate_ok(amount_cents, days_used, days_in_period):
+        return _prorate_rs(amount_cents, days_used, days_in_period)   # proven
+    return amount_cents * days_used // days_in_period                 # original</script>
+<script type="text/plain" id="src-py-lean">theorem prorate_spec (a u d : U64) (hd : 0 < d.val) (hu : u.val ≤ d.val)
+    (hf : a.val * u.val ≤ U64.max) :
+    ∃ r, prorate a u d = ok r ∧ r.val ≤ a.val</script>
+<section class="wrapx phero"><span class="eyebrow">Python inter-op ports</span><h1>Prove the Python backend through proven Rust.</h1><p>A Python project goes through the same pipeline with one extra front end. Pure, fully type-hinted spans are ported to Rust in the provable subset, called from the patched Python through a compiled extension, and proven. Inside the approved precondition the proven Rust runs; outside it, the original Python runs unchanged.</p><div class="ctas" style="margin-top:8px"><a class="btn btn-primary btn-lg" href="../dashboard/spec-review.html?o=prorate">Review prorate_spec in the dashboard</a><a class="btn btn-lg" href="index.html#python">See the story</a></div></section>
+<section class="sec"><div class="wrapx"><div class="sechead rv"><span class="num">01 / THE MECHANISM</span><h2>Find, port, guard, prove.</h2><p>From the port onward it is the Rust pipeline: extract, spec, prove, check. The port is validated like a patch: by differential tests and by the person reading the diff.</p></div>
+<div class="pipe rv"><div class="nd"><span class="k">1 · candidates</span><b>rustproof python candidates</b><span>pure, type-hinted, no I/O, no globals, no exceptions crossing the boundary</span></div><div class="nd hl"><span class="k">2 · port</span><b>port-python skill</b><span>Rust under .rustproof/crates/, written in the provable subset</span></div><div class="nd"><span class="k">3 · scaffold</span><b>Extension crate</b><span>PyO3, built with maturin</span></div><div class="nd hl"><span class="k">4 · patch</span><b>Guarded call</b><span>precondition generated as Python from the approved spec</span></div><div class="nd"><span class="k">5 · test</span><b>Differential, across languages</b><span>both agree or both fail; every port timed</span></div><div class="nd"><span class="k">6 · prove</span><b>Theorem about the Rust</b><span>Lean kernel, no sorry</span></div></div></div></section>
+<section class="sec"><div class="wrapx"><div class="sechead rv"><span class="num">02 / THE EXAMPLE</span><h2>A FastAPI billing handler.</h2></div>
+<div class="twocol"><div class="rv" style="display:grid;gap:12px"><div data-code-src="#src-py-before" data-lang="python" data-title="before · what the handler calls"></div><div data-code-src="#src-py-after" data-title="the port · provable subset"></div><div data-code-src="#src-py-shim" data-lang="python" data-title="the patch · guarded inter-op call"></div></div>
+<div class="rv" style="display:grid;gap:16px;align-content:start"><div class="thm"><div class="th"><span class="st" data-s="needs_review"><span class="g">◆</span>Proposed</span><code>prorate_spec</code></div><div class="tb"><p class="en">For every amount, days used and period length where the period is at least one day, the days used don’t exceed it, and amount × days used fits in 64 bits, <code>prorate</code> returns at most the amount.</p><div data-code-src="#src-py-lean" data-lang="lean"></div></div></div><div class="callout"><div class="ct"><span class="st" data-s="failing"><span class="g">✕</span></span>What the proof surfaced</div><div>Two things the handler never checked: a zero-day period divides by zero, and a large amount over a long period overflows 64 bits. The failure search reports <code>prorate(100, 1, 0)</code> before the spec is proposed, so the precondition arrives with the theorem.</div><div>The team decides: reject a zero-day period at the API boundary with a 400, or keep the guarded fallback. Either way, every call inside the precondition runs proven code, and the proof says a customer is never charged more than the full amount.</div></div></div></div></div></section>
+<section class="sec"><div class="wrapx"><div class="sechead rv"><span class="num">03 / WHAT COVERS THE GAP</span><h2>Nothing formally relates the Python to the Rust.</h2><p>Python integers are unbounded and <code>//</code> floors toward negative infinity; the port uses u64 and truncating division. The precondition keeps the proven path on inputs where the two semantics coincide.</p></div>
+<table class="tbl rv"><thead><tr><th>Python</th><th>Rust port</th><th>What covers the gap</th></tr></thead><tbody><tr><td>Unbounded <code>int</code></td><td>Fixed-width integers</td><td>A precondition in the spec, and the guard</td></tr><tr><td><code>//</code> floors toward −∞</td><td><code>/</code> truncates toward zero</td><td>They agree for non-negative operands; the precondition keeps the proven path there</td></tr><tr><td>Exceptions</td><td><code>Result</code></td><td>The extension raises the matching Python exception</td></tr><tr><td>Shared mutable lists and dicts</td><td>Owned values</td><td>Only spans with value semantics are candidates</td></tr><tr><td><code>str</code> indexing by code point</td><td>UTF-8 bytes</td><td>Spans that index strings aren’t candidates in v1</td></tr><tr><td>Duck typing</td><td>Static types</td><td>Type hints are required; the guard rejects other types</td></tr></tbody></table></div></section>
+<section class="sec"><div class="wrapx"><div class="sechead rv"><span class="num">04 / GUARDS, COST, SHIPPING</span><h2>Behavior outside the proof is exactly what it was.</h2></div>
+<div class="grid3 rv"><div class="tile"><h3>Guarded ports</h3><p>The patch dispatches on the approved precondition, generated as Python from the spec. Inside it the proven Rust runs; outside it the original Python runs unchanged. The guard itself is covered by the differential tests.</p></div><div class="tile"><h3>The cost of the boundary</h3><p>A call into Rust costs about 30 nanoseconds plus a few per argument. So candidates are whole loops rather than loop bodies, every port is timed, and a port slower than the Python it replaces is flagged.</p></div><div class="tile"><h3>What ships</h3><p>The patched Python tree plus the compiled extension, built by <code>rustproof build</code> with maturin and stamped with the same provenance hash as a Rust project.</p></div></div>
+<p class="t-small c3 rv" style="margin-top:18px;max-width:70ch">This is how rustproof proves its own Python backend: the platform’s authorization and quota decisions are ported, proven, and called through the extension from the deployed API. The parsers, the database and the API around them are shell and are not.</p></div></section>
+<section class="cta-band"><div class="wrapx" style="display:grid;gap:18px;justify-items:center"><h2>Your backend, with a proof on the money.</h2><p>Start with one billing rule. The port is a diff you can read, and the guard keeps everything else as it was.</p><div class="ctas" style="margin:0;justify-content:center"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="contact.html">Request early access</a></div></div></section>
+</main>
+<div id="site-footer"></div>
+</body>
+</html>

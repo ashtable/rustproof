@@ -1,0 +1,15 @@
+# Planning pipeline output (prompts/ideatoplan.md)
+# Ignore everything in these dirs except the exclusions below.
+# Use `dir/*` (not `dir/`) so the negations can re-include paths.
+scratch/*
+!scratch/claude-design/
+
+design-docs/*
+!design-docs/rustproof-spec.md
+
+# Build and tool output (delta §3.1)
+target/
+.rustproof/state/
+.rustproof/lean/.lake/
+node_modules/
+mutants.out*/

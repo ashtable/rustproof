@@ -1,0 +1,10 @@
+[package]
+name = "rustproof-pipeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rustproof-bricks = { path = "../rustproof-bricks" }
+rustproof-core = { path = "../rustproof-core" }
+rustproof-prover = { path = "../rustproof-prover" }

@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # rustup reads rust-toolchain.toml (channel 1.97.1, rustfmt, clippy).
+      - name: Install the pinned toolchain
+        run: |
+          rustup toolchain install --no-self-update
+          cargo --version
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo xtask check
+
+      # examples/fib-rs is outside the workspace, so the steps above skip it.
+      - name: examples/fib-rs
+        run: |
+          cargo fmt --manifest-path examples/fib-rs/Cargo.toml --check
+          cargo clippy --manifest-path examples/fib-rs/Cargo.toml --all-targets -- -D warnings
+          cargo test --manifest-path examples/fib-rs/Cargo.toml

@@ -1,0 +1,19 @@
+:root{
+--stainless-0:#FFFFFF;--stainless-25:#F7F9FB;--stainless-50:#F0F3F6;--stainless-100:#E3E8ED;--stainless-200:#CDD5DD;--stainless-300:#AEB9C4;--stainless-400:#8794A2;--stainless-450:#7A8796;--stainless-500:#66727F;--stainless-600:#4D5763;--stainless-700:#38404A;--stainless-900:#171B20;--stainless-950:#0D1013;
+--titanium-page:#0E1116;--titanium-surface:#161A20;--titanium-raised:#1E232B;--titanium-border:#2C333D;--titanium-text:#E6EBF0;
+--cobalt-50:#EDF3FF;--cobalt-300:#8DB2FF;--cobalt-500:#3D74F5;--cobalt-600:#2A5BD7;--cobalt-700:#2550C8;--cobalt-800:#2148AD;--cobalt-950:#142247;
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-24:96px;
+--rp-type-display:600 56px/60px var(--rp-font-sans);--rp-track-display:-0.03em;
+--rp-type-h1:600 40px/44px var(--rp-font-sans);--rp-track-h1:-0.025em;
+--rp-type-h2:600 28px/34px var(--rp-font-sans);--rp-track-h2:-0.02em;
+--rp-type-h3:600 20px/28px var(--rp-font-sans);--rp-track-h3:-0.01em;
+--rp-type-body:400 16px/26px var(--rp-font-sans);
+--rp-type-ui:500 14px/20px var(--rp-font-sans);
+--rp-type-small:400 13px/18px var(--rp-font-sans);
+--rp-type-caption:500 12px/16px var(--rp-font-sans);--rp-track-caption:0.01em;
+--rp-type-code:400 14px/22px var(--rp-font-mono);
+--rp-type-code-sm:400 13px/20px var(--rp-font-mono);
+--rp-metal-steel:linear-gradient(180deg,#3A424D 0%,#2A3039 48%,#20252C 52%,#2E353F 100%);
+--rp-metal-chrome:linear-gradient(180deg,#FFFFFF 0%,#E8EDF2 40%,#C9D2DB 52%,#EEF2F6 100%);
+--rp-brushed:repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0 1px,rgba(13,16,19,0.02) 1px 2px,transparent 2px 4px);
+}

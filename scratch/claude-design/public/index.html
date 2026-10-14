@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rustproof — Vibe code it. Prove it.</title>
+<meta name="description" content="rustproof proves the Rust your agent writes in Claude Code does what it should, and keeps it proven on every commit.">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="site.css">
+<script src="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/_ds_bundle.js"></script>
+<script src="../shared/rp.js"></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<script type="text/plain" id="src-before">use std::collections::HashMap;
+
+pub fn fib(n: u64) -> u64 {
+    fn go(n: u64, memo: &mut HashMap<u64, u64>) -> u64 {
+        if n < 2 {
+            return n;
+        }
+        if let Some(&v) = memo.get(&n) {
+            return v;
+        }
+        let v = go(n - 1, memo) + go(n - 2, memo);
+        memo.insert(n, v);
+        v
+    }
+    go(n, &mut HashMap::new())
+}</script>
+<script type="text/plain" id="src-after">pub fn fib(n: u64) -> u64 {
+    let mut a: u64 = 0;
+    let mut b: u64 = 1;
+    let mut i: u64 = 0;
+    while i < n {
+        let next = a + b;
+        a = b;
+        b = next;
+        i += 1;
+    }
+    a
+}</script>
+<script type="text/plain" id="src-lean">theorem fib_spec (n : U64) (h : n.val ≤ 93) :
+    ∃ r, fib n = ok r ∧ r.val = fibSpec n.val</script>
+<script type="text/plain" id="src-verdict">theorem verdict_pass_sound (obs : List Obligation) :
+    verdict obs = ok .pass →
+    ∀ o ∈ obs, o.state ≠ .failing ∧ o.state ≠ .counterexample ∧ o.state ≠ .stale</script>
+<main>
+<section class="wrapx hero">
+<div>
+<span class="eyebrow">For Rust written by agents in Claude Code · Python backends by inter-op</span>
+<h1 class="display">Vibe code it.<br>Prove it.</h1>
+<p class="lede">Agents write most code now. rustproof proves that the Rust your agent writes does what it is supposed to do, and keeps it proven on every commit. A Python service gets the same treatment: its pure decisions are ported to Rust, called through a compiled extension, and proven.</p>
+<div class="ctas"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="how-it-works.html">How it works</a></div>
+<div class="ctas" style="margin-top:16px"><span class="cmdline soon"><span class="ps">$</span>claude plugin add rustproof<span class="tag">coming soon</span></span><a class="t-small" href="contact.html">Request early access →</a></div>
+</div>
+<div class="story" data-ms="4200" aria-label="Fibonacci, proven in four beats">
+<div class="bar"><span class="plate"></span><span>examples/fib/src/lib.rs</span><span style="margin-left:auto">PR #212 · tree 7c2e91a</span></div>
+<div class="beats">
+<div class="beat"><div class="bh"><span class="n">01</span>Claude writes <code>fib</code><span class="cap">HashMap: no Aeneas model</span></div><div data-code-src="#src-before"></div></div>
+<div class="beat"><div class="bh"><span class="n">02</span>Patched at build time<span class="cap">brick memo-to-accumulator · −17 +12</span></div><div data-code-src="#src-after"></div></div>
+<div class="beat"><div class="bh"><span class="n">03</span>A theorem, English first<span class="cap">then Lean</span></div><div style="display:grid;gap:14px;align-content:start"><p class="claim">For every 64-bit integer n where n ≤ 93, <code>fib(n)</code> returns the n-th Fibonacci number.</p><span class="pre"><span>Precondition</span>n ≤ 93</span><div data-code-src="#src-lean" data-lang="lean"></div><div class="st" data-s="weak_spec"><span class="g">△</span>fib(94) overflows u64. No unit test would say so.</div></div></div>
+<div class="beat"><div class="bh"><span class="n">04</span>Proven<span class="cap">Lean kernel</span></div><div class="fin"><div class="qed">∎</div><div class="line"><b>fib_spec</b> · 4.2 s search · 1.4 s check · no <code>sorry</code> · axioms ⊆ allowed</div><div class="line c3">proven against patched tree 7c2e91a, the tree that shipped</div></div></div>
+</div>
+<div class="dots"><button class="dot"><i></i>Vibe-coded</button><button class="dot"><i></i>Patched</button><button class="dot"><i></i>Theorem</button><button class="dot"><i></i>∎ Proven</button></div>
+</div>
+</section>
+<script type="text/plain" id="src-py-before"># billing/prorate.py
+def prorate(amount_cents: int, days_used: int, days_in_period: int) -> int:
+    return amount_cents * days_used // days_in_period</script>
+<script type="text/plain" id="src-py-after">// .rustproof/crates/billing/src/lib.rs
+pub fn prorate(amount_cents: u64, days_used: u64, days_in_period: u64) -> u64 {
+    amount_cents * days_used / days_in_period
+}</script>
+<script type="text/plain" id="src-py-shim"># patched tree
+from rustproof_ext.billing import prorate as _prorate_rs
+
+def _prorate_ok(a: int, u: int, d: int) -> bool:   # generated from the approved spec
+    return 0 < d and 0 <= u <= d and 0 <= a and a * u <= 18_446_744_073_709_551_615
+
+def prorate(amount_cents: int, days_used: int, days_in_period: int) -> int:
+    if _prorate_ok(amount_cents, days_used, days_in_period):
+        return _prorate_rs(amount_cents, days_used, days_in_period)   # proven
+    return amount_cents * days_used // days_in_period                 # original</script>
+<script type="text/plain" id="src-py-lean">theorem prorate_spec (a u d : U64) (hd : 0 < d.val) (hu : u.val ≤ d.val)
+    (hf : a.val * u.val ≤ U64.max) :
+    ∃ r, prorate a u d = ok r ∧ r.val ≤ a.val</script>
+<script type="text/plain" id="src-approve-lean">theorem may_approve_sound (role : Role) (is_author owns_specs : Bool) :
+    may_approve role is_author owns_specs = ok true →
+    owns_specs = true ∧ is_author = false ∧ (role = .owner ∨ role = .maintainer)</script>
+<section class="sec" id="python"><div class="wrapx">
+<div class="sechead rv"><span class="num">01 / THE PYTHON BACKEND</span><h2>Prove the Python backend, too.</h2><p>A Python service gets the same treatment: rustproof ports its pure decisions to Rust, calls them from Python through a compiled extension, and proves the Rust. Inside the approved precondition the proven code runs; outside it, the original Python runs unchanged.</p></div>
+<div class="twocol" style="align-items:stretch">
+<div class="story rv" data-ms="5200" aria-label="A FastAPI billing rule, proven in four beats">
+<div class="bar"><span class="plate"></span><span>billing/prorate.py</span><span style="margin-left:auto">guarded inter-op port</span></div>
+<div class="beats">
+<div class="beat"><div class="bh"><span class="n">01</span>A FastAPI billing handler calls this<span class="cap">pure · type-hinted · no I/O</span></div><div style="display:grid;gap:14px;align-content:start"><div data-code-src="#src-py-before" data-lang="python"></div><p class="t-small c2"><code>rustproof python candidates</code> finds it. The agent ports it with the <code>port-python</code> skill, straight into the provable subset.</p></div></div>
+<div class="beat"><div class="bh"><span class="n">02</span>Ported, then patched with a guard<span class="cap">PyO3 extension · maturin</span></div><div style="display:grid;gap:8px;align-content:start"><div data-code-src="#src-py-after"></div><div data-code-src="#src-py-shim" data-lang="python"></div></div></div>
+<div class="beat"><div class="bh"><span class="n">03</span>A theorem about the Rust<span class="cap">English first, then Lean</span></div><div style="display:grid;gap:14px;align-content:start"><p class="claim">Where the period is at least one day, the days used don’t exceed it, and amount × days used fits in 64 bits, <code>prorate</code> returns at most the amount.</p><div data-code-src="#src-py-lean" data-lang="lean"></div><div class="st" data-s="failing"><span class="g">✕</span>prorate(100, 1, 0) divides by zero. The handler never checked.</div></div></div>
+<div class="beat"><div class="bh"><span class="n">04</span>Proven<span class="cap">Lean kernel</span></div><div class="fin"><div class="qed">∎</div><div class="line"><b>prorate_spec</b> · a customer is never charged more than the full amount</div><div class="line c3">the deployed API calls proven Rust inside the precondition, and the Python it always ran outside it</div></div></div>
+</div>
+<div class="dots"><button class="dot"><i></i>Python</button><button class="dot"><i></i>Ported + guarded</button><button class="dot"><i></i>Theorem</button><button class="dot"><i></i>∎ Proven</button></div>
+</div>
+<div class="rv" style="display:grid;gap:16px;align-content:start"><div class="opts"><div class="opt"><b>1</b><div><div class="t">Find candidates</div><div class="d"><code>rustproof python candidates</code>: pure, fully type-hinted spans with no I/O, no globals, no exceptions crossing the boundary.</div></div></div><div class="opt"><b>2</b><div><div class="t">Port and patch</div><div class="d">Rust under <code>.rustproof/crates/</code>, written in the provable subset. The patch replaces the Python body with a call into the extension, guarded by the approved precondition.</div></div></div><div class="opt"><b>3</b><div><div class="t">Differential tests across the boundary</div><div class="d">Generated inputs; both versions must agree, or both must fail. Every port is timed; one slower than the Python it replaces is flagged.</div></div></div><div class="opt"><b>4</b><div><div class="t">What the proof surfaced</div><div class="d">A zero-day period divides by zero; a large amount over a long period overflows 64 bits. Decide: a 400 at the API boundary, or keep the guarded fallback.</div></div></div></div><div class="ctas" style="margin:0"><a class="btn" href="python.html">Python inter-op, in depth</a><a class="btn btn-ghost" href="../dashboard/spec-review.html?o=prorate">Review prorate_spec in the dashboard</a></div></div>
+</div>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">02 / THE AHA</span><h2>The proof found what the tests would not.</h2><p>fib(10) == 55 passes. So does fib(93). The theorem could not be proven for all of u64, and the counterexample finder said why.</p></div>
+<div class="aha">
+<div class="bignum rv"><div class="r ok"><span class="l">fib(93)</span><span class="v">12,200,160,415,121,876,738<small>fits in u64</small></span></div><div class="r bad"><span class="l">fib(94)</span><span class="v">19,740,274,219,868,223,167<small>overflows u64</small></span></div><div class="r"><span class="l">theorem</span><span class="v" style="font-size:16px;font-family:var(--rp-font-lean)">(h : n.val ≤ 93)</span></div></div>
+<div class="rv"><p class="t-body c2" style="margin-bottom:18px">This is the spec review moment. The developer reads one sentence of English and chooses. Every option is legitimate; the point is that the system forces the decision instead of hiding it.</p><div class="opts"><div class="opt"><b>a</b><div><div class="t">Accept the precondition</div><div class="d">Guard it at the boundary. Callers get an error for n &gt; 93.</div></div></div><div class="opt"><b>b</b><div><div class="t">Widen the type</div><div class="d"><code>u128</code> is good up to fib(186). Re-prove.</div></div></div><div class="opt"><b>c</b><div><div class="t">Make overflow explicit</div><div class="d"><code>checked_add</code>, return <code>Option&lt;u64&gt;</code>, handle <code>None</code>.</div></div></div></div></div>
+</div>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">03 / DOGFOOD</span><h2>rustproof proves rustproof.</h2><p>The CLI is Rust and the platform API is Python, so rustproof runs on both of its own paths. The merge gate is a proven theorem in the CLI. Who may approve a spec is a Python decision, ported and proven through the inter-op path.</p></div>
+<div class="thm rv" id="gate"><div class="th"><span class="st" data-s="proven"><span class="g">●</span>Proven</span><code>crates/core/src/gate.rs</code><span>·</span><span>verdict_pass_sound</span><span class="seg toggle" data-target="gate"><button aria-pressed="true" data-view="en">English</button><button aria-pressed="false" data-view="lean">Lean</button></span></div><div class="tb"><p class="en" data-view="en">If the merge gate says <strong>pass</strong>, then no obligation in the run is failing, has a counterexample, or is stale.</p><div data-view="lean" hidden data-code-src="#src-verdict" data-lang="lean"></div></div></div>
+<div class="thm rv" id="approve" style="margin-top:16px"><div class="th"><span class="st" data-s="proven"><span class="g">●</span>Proven</span><code>platform/policy/approve.py</code><span>·</span><span>may_approve_sound · inter-op port</span><span class="seg toggle" data-target="approve"><button aria-pressed="true" data-view="en">English</button><button aria-pressed="false" data-view="lean">Lean</button></span></div><div class="tb"><p class="en" data-view="en">If the platform says a person may <strong>approve a spec</strong>, that person owns the specs directory, holds the owner or maintainer role, and did not author the change.</p><div data-view="lean" hidden data-code-src="#src-approve-lean" data-lang="lean"></div></div></div>
+<div class="thmrows rv"><div><span class="st" data-s="proven"><span class="g">●</span></span><span><code>proven_requires_check</code> · a function is Proven only from Checking, on a checked proof; a changed source is always Stale</span><span class="st c3">status state machine</span></div><div><span class="st" data-s="proven"><span class="g">●</span></span><span><code>check_ok_sound</code> · if the policy check passes, the proof has no <code>sorry</code> and uses only allowed axioms</span><span class="st c3">policy check</span></div><div><span class="st" data-s="proven"><span class="g">●</span></span><span><code>quota_allows_sound</code> · a run starts only when the org is under its quota</span><span class="st c3">platform, inter-op port</span></div></div>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">04 / THE PIPELINE</span><h2>Prove whenever possible. Test the rest.</h2><p>Code that can be proven is patched into the subset Aeneas accepts, extracted to Lean 4, given a theorem, and proven by Leanstral. I/O, the network, the clock and unsafe code stay outside the boundary and are covered by tests.</p></div>
+<div class="pipe rv"><div class="nd"><span class="k">Rust · Python</span><b>Your workspace</b><span>a Cargo workspace, or a Python service with pure decisions</span></div><div class="nd hl"><span class="k">Patch</span><b>Bricks</b><span>into the provable subset</span></div><div class="nd"><span class="k">Extract</span><b>Charon → Aeneas</b><span>pure functions in Lean 4</span></div><div class="nd"><span class="k">Spec</span><b>Theorem</b><span>plain English, then Lean</span></div><div class="nd"><span class="k">Prove</span><b>Leanstral</b><span>parallel search, in the cloud</span></div><div class="nd hl"><span class="k">Check</span><b>Lean kernel</b><span>deterministic, local</span></div><div class="nd out"><span class="k">Excluded</span><b>I/O, unsafe, async</b><span>covered by tests, shown with a reason</span></div></div>
+<p class="t-small c3 rv" style="margin-top:18px;max-width:70ch">When the code after an I/O call takes the result as an argument, the theorem holds for every possible response. That is stronger than any mock.</p>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">05 / THE TRUST MODEL</span><h2>Specs are the review surface. Proofs are not.</h2></div>
+<div class="prin rv"><div><h3>The proven code is the running code</h3><p>rustproof proves the patched tree, and the patched tree is what gets compiled and shipped. Proofs are keyed to its hash; release artifacts are stamped with it.</p></div><div><h3>Humans read theorems, never proofs</h3><p>The Lean kernel rejects every invalid proof, so proof generation is fully automated. Nothing checks a spec except a person, in plain English first.</p></div><div><h3>Patches are visible, tested, reversible</h3><p>Every patch is a before/after diff in Claude Code, the PR and the dashboard. Both sides compile, so they run on the same generated inputs. Reject one and the function leaves the proof boundary.</p></div><div><h3>No escape hatches</h3><p>The build fails on <code>sorry</code>, on any axiom outside the approved set, and on any proof that relies on unchecked evaluation. Overflow checks stay on in release, so the binary matches the model.</p></div></div>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">06 / FOUR SURFACES, ONE BACKEND</span><h2>Your CI/CD system becomes your build engineer.</h2><p>It repairs what it is allowed to repair, patches what it is allowed to patch, and escalates what it isn't. Changing a theorem is never on that list.</p></div>
+<div class="grid4 rv"><a class="tile" href="plugin.html"><span class="k">CLI + PLUGIN</span><h3>Claude Code</h3><p>Hooks stop the agent before it calls a broken proof done. The mod draws rustproof's own panes inside the terminal.</p><span class="more">The plugin →</span></a><a class="tile" href="github.html"><span class="k">CIRCLECI-SHAPED</span><h3>GitHub</h3><p>A required check on every PR and merge, one sticky comment with spec diffs and counterexamples.</p><span class="more">GitHub integration →</span></a><a class="tile" href="cloud.html"><span class="k">GPU-HEAVY, REMOTE</span><h3>rustproof cloud</h3><p>Proof search and repair, counterexamples, mutation, and a content-addressed cache of checked artifacts.</p><span class="more">The cloud →</span></a><a class="tile" href="agent.html"><span class="k">RAILWAY-SHAPED</span><h3>Platform agent</h3><p>Explains why a proof fails, with the counterexample. Proposes spec changes; never applies them.</p><span class="more">The agent →</span></a></div>
+</div></section>
+
+<section class="sec"><div class="wrapx">
+<div class="sechead rv"><span class="num">07 / START</span><h2>Three steps, inside Claude Code.</h2></div>
+<div class="steps3 rv"><div class="step3"><span class="n">1</span><b>Install the plugin</b><code class="soon">claude plugin add rustproof<span class="tag">coming soon</span></code><p>Bundles the CLI, hooks, Lean's language server and the mod.</p></div><div class="step3"><span class="n">2</span><b>Log in</b><code class="soon">/rustproof:login<span class="tag">coming soon</span></code><p>Browser OAuth. Sign-up happens in the same flow; the token lives in your OS keychain.</p></div><div class="step3"><span class="n">3</span><b>Scan the workspace</b><code class="soon">/rustproof:init<span class="tag">coming soon</span></code><p>Classifies every function as provable, patchable or excluded, with the reason.</p></div></div>
+</div></section>
+
+<section class="cta-band"><div class="wrapx" style="display:grid;gap:18px;justify-items:center"><h2>No more "trust me bro."</h2><p>A build whose proven functions are proven against the exact code in that build.</p><div class="ctas" style="margin:0;justify-content:center"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="contact.html">Request early access</a></div></div></section>
+</main>
+<div id="site-footer"></div>
+</body>
+</html>
