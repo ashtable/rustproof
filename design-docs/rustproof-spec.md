@@ -117,7 +117,7 @@ rustproof/
 | `patch` | For each patchable function, instantiate the chosen brick and write `.rustproof/patches/<fn>.patch`. Provable functions get an empty patch. Materialize the patched tree at `target/rustproof/tree/` (§4.6). Record `patched_hash` = hash of the patched tree's tracked files, excluding the manifest. |
 | `extract` | On the patched tree: `charon cargo --preset=aeneas` → `.llbc`; `aeneas -backend lean` → `.rustproof/lean/Generated/`. Excluded functions are declared opaque to Charon (`[package.metadata.charon] opaque = [...]` in the patched tree's `Cargo.toml`, or `#[charon::opaque]`; never `--exclude`, which drops the item and breaks references), so extraction of the rest proceeds and each excluded callee becomes a declared signature in the generated Lean. Record `lean_hash` per obligation = hash of its generated Lean plus its callees'. |
 | `propose_specs` | First run a short failure search on the patched function (`proptest`, panics and overflow) to find the input boundary. Then write the theorem as a Lean `Prop` in `.rustproof/specs/` with the precondition, a plain-English docstring, and any counterexample attached as evidence; status `needs_review`. A revision (`rustproof spec propose --revise <fn> --note "…"`) rewrites the proposal and returns it to `needs_review`. |
-| `prove` | Run proof search through the `Prover` trait (`leanstral-api`, `manual`, or `platform`, §9); a brick's proof template is passed as the starting skeleton; write proofs of exactly those `Prop`s to `.rustproof/proofs/` |
+| `prove` | Run proof search through the `Prover` trait (`manual`, `agent`, `leanstral-api`, or `platform`, §9); a brick's proof template is passed as the starting skeleton; write proofs of exactly those `Prop`s to `.rustproof/proofs/` |
 | `check` | `lake build` + policy checks (§4.5) |
 | `mutate` | Behavior-changing mutants of the patched Rust (`cargo-mutants`), re-extract, re-check; a proof that still checks against a mutant marks `weak_spec`. Discard mutants the differential tests can't tell apart. This is a heuristic for specs that don't constrain the code, not a completeness check. |
 | `counterexample` | Property-based search (`proptest`) and fuzzing for a failing input. The oracle is the spec's reference definition when it is computable (rustproof compiles it to Rust, or evaluates it with Lean `#eval`); otherwise only panics and overflow are detectable, and the obligation says so. |
@@ -135,7 +135,7 @@ Every primitive is callable as `rustproof step <name> --json`, which is how the 
 - **Output:** a JSON object on stdout matching `schemas/steps/<name>.response.json`: `ok`, the new status per obligation, the hashes produced (`source_hash`, `patched_hash`, `lean_hash`, `spec_hash`), the artifacts written (paths under `.rustproof/`), `cache_hit`, and a human-readable `summary`. Diagnostics go to stderr.
 - **Idempotent and content-keyed:** running a step twice with the same input returns the same output, and the second run reports `cache_hit: true` from the step cache (§4.3). This is what makes a DBOS step wrapping a CLI call safe to retry.
 - **Exit codes:** a step exits 0 whenever it ran and returned an authoritative response, including domain outcomes such as a failed check or "needs review"; the response's `ok` is the domain result. A non-zero exit means the step itself could not run (for example `10`, auth required). The verdict codes 1 to 5 of §6 belong to the ordinary commands, not to `rustproof step`.
-- **No network unless asked.** Only `prove` with `--prover leanstral-api` or `platform` talks to the network, and only to the endpoint named.
+- **No network unless asked.** Only `prove` with `--prover agent`, `leanstral-api`, or `platform` talks to the network, and only to the endpoint named.
 
 The ordinary commands (`rustproof patch`, `rustproof check`, …) are thin wrappers that call the same steps and print a human summary.
 
@@ -165,7 +165,7 @@ Track the supported Rust subset as a versioned profile (`aeneas_profile` in the 
 ### 4.5 Policy checks (`rustproof check`)
 
 - No `sorry` or `admit` under `.rustproof/specs/`, `.rustproof/proofs/`, or `.rustproof/lean/Generated/` (not under `.lake/`, which holds Mathlib)
-- For every proof theorem, `#print axioms` reports only `propext`, `Classical.choice`, `Quot.sound`, and the declared signatures Aeneas generated for this obligation's excluded callees (its trust base, listed in the manifest). Anything else fails. This also catches `sorryAx` and `native_decide` (which shows up as `Lean.ofReduceBool`); plain `decide` is fine.
+- For every proof theorem, `#print axioms` reports only `propext`, `Classical.choice`, `Quot.sound`, and the declared signatures Aeneas generated for this obligation's excluded callees (its trust base, listed in the manifest). Anything else fails. This also catches `sorryAx` and `native_decide` (which shows up as `Lean.ofReduceBool`, or, at Lean 4.35, as an axiom named `<theorem>._native.native_decide.ax_*`); plain `decide` is fine.
 - Every approved spec has exactly one proof whose type is that spec.
 - No proof file redefines or shadows a spec.
 - Every obligation's `lean_hash` matches the Lean its proof was checked against. A changed `source_hash` marks it `stale` until re-extraction; if the `lean_hash` comes back unchanged, the proof is kept and the obligation returns to `proven` without a new search. `patched_hash` is a build stamp, not a staleness trigger. The build refuses while anything is `stale`.
@@ -331,7 +331,7 @@ The manifest is the source of truth for obligations in the repo. The platform's 
 | `rustproof diff [fn…]` | Shows before/after for a function | `--json` for the mod |
 | `rustproof spec propose [fn…]` | Proposes specs (`needs_review`); `--revise <fn> --note "…"` rewrites a proposal after "Request changes" | Never approves |
 | `rustproof spec approve <fn>` | Records the approval and continues the pipeline locally, or forwards it to the platform when the obligation runs there | Requires a TTY, or `--via pane` from the mod (§8.6) |
-| `rustproof prove [fn…]` | Runs or requests proof search | `--prover leanstral-api \| manual \| platform` (§9); `platform` returns a run id, `--wait` blocks |
+| `rustproof prove [fn…]` | Runs or requests proof search | `--prover manual \| agent \| leanstral-api \| platform` (§9); `platform` returns a run id, `--wait` blocks |
 | `rustproof check` | `lake build` + policy checks | Local; no network |
 | `rustproof build [--commit]` | Materializes and builds the patched tree; `--commit` applies patches in place | Refuses stale obligations |
 | `rustproof test` | Differential tests per patch + project tests on the patched tree | |
@@ -597,7 +597,7 @@ The platform's base URL defaults to `https://api.rustproof.dev` and is overridab
 
 ## 12. Milestones (this repo)
 
-Milestone numbers are shared with the platform spec so cross-references hold. M3, M4, M5 and M9 live there.
+Milestone numbers are shared with the platform spec so cross-references hold. M3, M4, M5, M9 and M11 live there.
 
 | # | Milestone | Done when |
 | --- | --- | --- |
