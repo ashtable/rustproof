@@ -24,7 +24,7 @@ Read design-docs/rustproof-spec.md and design-docs/design-delta.md before starti
 
 ## State of the repo
 
-This is a **pre-code repo**: no Cargo workspace, crates, plugin, tests or CI exist yet, so there is nothing to build, lint or run today. What exists is the target spec, the prompts that drive the design-to-code pipeline, agent definitions, and a Claude Design prototype. Everything under "Architecture" below is *specified, not built*; check the tree before assuming a path exists.
+Increment 0 of the plan has landed: a Cargo workspace skeleton (the crates exist but hold no logic yet; `rustproof --version` works), `cargo xtask check`, the `examples/fib-rs` fixture and CI. The plugin, the pipeline and everything under "Architecture" below are still *specified, not built*; check the tree before assuming a path exists. Also here: the target spec, the prompts that drive the design-to-code pipeline, agent definitions, and a Claude Design prototype.
 
 `design-docs/rustproof-spec.md` is the authority. Read it before any task. It describes this repo as a public Apache-2.0 monorepo (Rust CLI, Claude Code plugin and mod, brick library, `rustproof-std`, Lean helpers, toolchain image). The private sibling `../rustproof-platform` (website, API/MCP server, DBOS workers) depends on this repo, never the reverse. Design deltas and plans here cover this repo only; the platform repo is read for context.
 
@@ -56,14 +56,20 @@ This is a **pre-code repo**: no Cargo workspace, crates, plugin, tests or CI exi
 
 ## Commands
 
-Nothing builds yet. Once the plan's Increment 0 lands (T03 to T05), the planned commands are:
+Commands that work today:
 
 ```bash
 cargo build --workspace
 cargo test --workspace
-cargo test -p rustproof-pipeline profile      # a single test: -p <crate> <name filter>
-cargo fmt --check && cargo clippy --workspace -- -D warnings
-cargo xtask check                             # repo invariants, e.g. rustproof-core has zero [dependencies]
+cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings
+cargo xtask check                             # repo invariants: rustproof-core has zero [dependencies]
+cargo test --manifest-path examples/fib-rs/Cargo.toml   # the example is outside the workspace
+```
+
+Planned (not built yet):
+
+```bash
+cargo test -p rustproof-pipeline profile      # a single test: -p <crate> <name filter> (T08)
 claude plugin validate --strict plugin/       # plugin and mod (spec §8.7)
 claude plugin test plugin/
 ```
