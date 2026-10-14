@@ -1,6 +1,6 @@
 # rustproof — Implementation Spec (public repo)
 
-This is the build-facing spec for the **`rustproof`** repository: a public, Apache-2.0 monorepo holding the Rust CLI, the Claude Code plugin, the brick library, `rustproof-std`, the Lean helpers and the toolchain image. Put it at `docs/rustproof-spec.md` and point to it from `CLAUDE.md` (snippet at the end).
+This is the build-facing spec for the **`rustproof`** repository: a public, Apache-2.0 monorepo holding the Rust CLI, the Claude Code plugin, the brick library, `rustproof-std`, the Lean helpers and the toolchain image. It lives at `design-docs/rustproof-spec.md`, and `CLAUDE.md` points to it (snippet at the end).
 
 The product design document (`rustproof-design.md`) explains *why*. The companion **`rustproof-platform-spec.md`** covers the private platform repo (the website, the API and MCP server, the DBOS workers, Postgres, Railway). This file says *what to build in this repo, in what order, and how to know it's done*.
 
@@ -65,8 +65,6 @@ The private **platform** (website, API and MCP server, DBOS workers, Postgres) o
 Keep the `Prover` interface model-agnostic.
 
 ### 2.1 Where each tool runs
-
-Charon and Aeneas are heavy to install (Aeneas is OCaml and is easiest through Nix). So:
 
 Charon and Aeneas are heavy to install (Aeneas is OCaml and is easiest through Nix). So:
 
@@ -136,7 +134,7 @@ Every primitive is callable as `rustproof step <name> --json`, which is how the 
 - **Input:** a JSON object on stdin (or `--input file.json`) matching `schemas/steps/<name>.request.json`: the repo root, the obligation ids, and the hashes the caller already knows.
 - **Output:** a JSON object on stdout matching `schemas/steps/<name>.response.json`: `ok`, the new status per obligation, the hashes produced (`source_hash`, `patched_hash`, `lean_hash`, `spec_hash`), the artifacts written (paths under `.rustproof/`), `cache_hit`, and a human-readable `summary`. Diagnostics go to stderr.
 - **Idempotent and content-keyed:** running a step twice with the same input returns the same output, and the second run reports `cache_hit: true` from the step cache (§4.3). This is what makes a DBOS step wrapping a CLI call safe to retry.
-- **Exit codes** follow §6, so a non-zero exit is a real failure, never "needs review".
+- **Exit codes:** a step exits 0 whenever it ran and returned an authoritative response, including domain outcomes such as a failed check or "needs review"; the response's `ok` is the domain result. A non-zero exit means the step itself could not run (for example `10`, auth required). The verdict codes 1 to 5 of §6 belong to the ordinary commands, not to `rustproof step`.
 - **No network unless asked.** Only `prove` with `--prover leanstral-api` or `platform` talks to the network, and only to the endpoint named.
 
 The ordinary commands (`rustproof patch`, `rustproof check`, …) are thin wrappers that call the same steps and print a human summary.
@@ -325,7 +323,7 @@ The manifest is the source of truth for obligations in the repo. The platform's 
 | --- | --- | --- |
 | `rustproof login [--device]` | Browser OAuth (PKCE, loopback redirect); `--device` for a device-code flow on headless machines | Token in the OS keychain (`keyring`); `RUSTPROOF_TOKEN` overrides both for CI |
 | `rustproof logout`, `whoami` | Session management | |
-| `rustproof auth header` | Prints `{"Authorization":"Bearer …"}` | Used by the plugin's `headersHelper`; refreshes if needed |
+| `rustproof auth header` | Prints `{"Authorization":"Bearer …"}` | For MCP clients that connect to the platform's server directly; refreshes if needed |
 | `rustproof doctor [--install]` | Checks and installs local toolchain pieces | Lean via elan; extraction image via Docker/Podman |
 | `rustproof init` | Runs `init_repo`; creates `.rustproof/` | `--json` for agents; prints coverage: provable / patchable / excluded with reasons |
 | `rustproof scan` | Re-classifies functions | Fast; no extraction |
@@ -404,7 +402,7 @@ Plugin name is `rustproof`, so skills are `/rustproof:login` and `/rustproof:ini
 
 ### 8.2 CLI installation
 
-The `bin/` shim execs `~/.rustproof/bin/rustproof`, downloading the pinned release binary first if it's missing, so it also works when the `headersHelper` runs at MCP connect time, before any hook. The SessionStart settings hook updates the binary when it's outdated, so the CLI and plugin never drift. The CLI lives in its own home rather than the plugin directory because the plugin root changes on update and the binary is shared with terminal use. Plugins with a top-level `bin/` work in Claude Code but aren't installed by claude.ai; Claude Code is the target.
+The `bin/` shim execs `~/.rustproof/bin/rustproof`, downloading the pinned release binary first if it's missing, so it also works when the `local` MCP server starts at connect time, before any hook. The SessionStart settings hook updates the binary when it's outdated, so the CLI and plugin never drift. The CLI lives in its own home rather than the plugin directory because the plugin root changes on update and the binary is shared with terminal use. Plugins with a top-level `bin/` work in Claude Code but aren't installed by claude.ai; Claude Code is the target.
 
 ### 8.3 The rustproof mod: surfaces
 
@@ -416,7 +414,7 @@ The `bin/` shim execs `~/.rustproof/bin/rustproof`, downloading the pinned relea
 | Patch review | The "Needs you" tab, when a patch requires approval | The diff, the brick's description, the differential-test summary, and buttons `a` Approve, `x` Reject (exclude), `b` Choose another brick |
 | "More provable" nudge | After a `.rs` edit that scans as `patchable` or `excluded` | For the person: a one-line `$.ui.log` (`rustproof: fib is patchable (memo-to-accumulator). Write it as an accumulator loop to skip the patch.`). For Claude: `$.ui.log` is not sent to the model, so the same text is returned as hook context by the PostToolUse settings hook (§8.8) and appended to the tool result by the mod's `tool.call` hook. The skill `make-provable` has the idiom. |
 | Run progress | `Spinner` suffix | `<verb> · rustproof searching 3/5…` while a proof run is active; the verb is Claude Code's own spinner word, only the suffix is ours |
-| Tool rows | `ToolUse` / `ToolResult` for `mcp__plugin_rustproof_cloud__*` | A compact status row (`◌ request_proofs · fib_rs::fib · run r_82f`) instead of raw JSON |
+| Tool rows | `ToolUse` / `ToolResult` for `mcp__plugin_rustproof_local__*` | A compact status row (`◌ request_proofs · fib_rs::fib · run r_82f`) instead of raw JSON |
 | Turn summary | `turn.complete` returning `{ text }` | `rustproof: 2 obligations changed · 1 needs review` |
 | Notices | `$.ui.toast`, `$.ui.status` | "Proof found: fib_rs::fib"; a persistent status line during long runs |
 | Coverage | `Raster` in the terminal, `Svg` elsewhere | Per-module heat map colored by the worst status in the module |
@@ -463,7 +461,7 @@ Pressing Approve runs `rustproof spec approve <fn> --via pane` (or `rustproof pa
 
 ### 8.7 The mod: where it draws, requirements, review
 
-- Draws in the Claude Code terminal (v2.1.287+) and the Desktop app's Code tab. Per the mod types in this build: `Pane` is raised on every surface (terminal, desktop, vscode, mobile); `AbovePrompt` and `Spinner` are terminal and desktop only; `Raster` is terminal only; `Svg` is desktop, vscode and mobile. So in VS Code the pane draws but the band and spinner don't. In `claude -p` and cloud sessions, hooks run and nothing draws: fall back to `$.ui.log` lines and a text reply from `/proofs`. Check `e.surface` before choosing elements.
+- Draws in the Claude Code terminal (v2.1.287+) and the Desktop app's Code tab. Per the published mods reference: `Pane`, `AbovePrompt` and `Spinner` draw in the terminal and on Desktop; `Raster` is terminal only; `Svg` is Desktop only. Nothing draws in VS Code, `claude -p`, Agent SDK or cloud sessions: hooks run there, so fall back to `$.ui.log` lines and a text reply from `/proofs`. Check `e.surface` before choosing elements.
 - The mod calls only `$.process.run` / `$.process.spawn` (the rustproof CLI), `$.state`, `$.store`, `$.clock`, `$.command`, and `$.ui`. No `$.http`: all network traffic goes through the CLI. This keeps `claude plugin validate` output short enough for a security team to review.
 - CI runs `claude plugin validate --strict plugin/` and `claude plugin test plugin/`. Give every control a `key` so tests can press it.
 - Hooks have a 10-second own-time limit; long work happens in the CLI, and waiting on `$.process.run` doesn't count against it.
@@ -487,10 +485,9 @@ See the Claude Code hooks reference for the exact deny and block response format
 ```json
 {
   "mcpServers": {
-    "cloud": {
-      "type": "http",
-      "url": "https://mcp.rustproof.dev/mcp",
-      "headersHelper": "\"${CLAUDE_PLUGIN_ROOT}\"/bin/rustproof auth header"
+    "local": {
+      "command": "rustproof",
+      "args": ["mcp"]
     },
     "lean-lsp": {
       "command": "uvx",
@@ -500,7 +497,7 @@ See the Claude Code hooks reference for the exact deny and block response format
 }
 ```
 
-The helper supplies the `Authorization` header, so Claude Code doesn't start its own OAuth flow for this server, and reruns the helper after a 401. Verify the `lean-lsp-mcp` launch command against its README. Until the platform exists (Milestones 1–2), the plugin ships a `local` stdio entry (`"command": "rustproof", "args": ["mcp"]`) instead of the `cloud` http entry.
+The plugin ships this `local` stdio entry permanently and never a `cloud` HTTP entry: all network traffic goes through the CLI (§8.7), and the tool namespace stays `mcp__plugin_rustproof_local__*`, so hook matchers never change. Verify the `lean-lsp-mcp` launch command against its README.
 
 ### 8.10 Remote MCP tools
 
@@ -518,7 +515,7 @@ The helper supplies the `Authorization` header, so Claude Code doesn't start its
 
 These tools are defined once, as JSON schemas in `schemas/mcp/`. The platform's server implements them over its API; `rustproof mcp` implements the same schemas locally where no account is needed (`scan_repo`, `patch_fn`, `explain_patch`) and forwards the rest. One conformance test in this repo runs the same calls against both servers.
 
-Long work returns a run id and is polled. Claude Code also moves MCP calls that run past two minutes into the background. Plugin server tools are namespaced (`mcp__plugin_rustproof_cloud__<tool>`); use full names in matchers and permission rules.
+Long work returns a run id and is polled. Claude Code also moves MCP calls that run past two minutes into the background. Plugin server tools are namespaced (`mcp__plugin_rustproof_local__<tool>`); use full names in matchers and permission rules.
 
 ### 8.11 LSP
 
@@ -563,10 +560,12 @@ pub trait Prover {
 
 Implementations in `crates/rustproof-prover`:
 
-- `LeanstralApi`: Mistral's hosted endpoint, with `lean-lsp-mcp` as the agent's tools, using the key in `MISTRAL_API_KEY`. The agent loop lives here, in Rust, so the platform's workers run proof search by calling `rustproof step prove --prover leanstral-api` with the platform's key; there is one implementation of the loop.
+- `Agent`: the agent loop, with `lean-lsp-mcp` as the agent's tools, against any OpenAI-compatible chat-completions endpoint with tool calling (`RUSTPROOF_PROVER_URL`, `RUSTPROOF_PROVER_MODEL`, `RUSTPROOF_PROVER_API_KEY`), for example a self-hosted Leanstral from the open weights. The loop lives here, in Rust, so the platform's workers run proof search by calling `rustproof step prove`; there is one implementation of the loop.
+- `LeanstralApi`: a preset of `Agent` for Mistral's API, using the key in `MISTRAL_API_KEY`. The model id must be set in `RUSTPROOF_PROVER_MODEL`; there is no default, because Mistral's hosted Leanstral ids are retired.
 - `Manual`: reads `.rustproof/proofs/`; tests and M0.
 - `Platform`: a client of the platform's API (§10) that requests a run and polls it; for users who'd rather not hold a Mistral key.
-- Later: a self-hosted Leanstral behind the same trait.
+
+Default resolution: `--prover`, else `RUSTPROOF_PROVER`, else `manual` when the obligation has a proof file, else `agent` when configured; otherwise `prove` stops with a configuration error that says how to set a prover up. `platform` is never chosen implicitly, because it sends code off the machine.
 
 Whether the model uses a brick's proof template well is an M0 measurement: pass it as the initial proof skeleton and compare pass rates with and without.
 
@@ -584,7 +583,7 @@ The CLI is a client of the platform; the platform is never a dependency of this 
 | Status vocabulary and `verdict` | `crates/rustproof-core` | The platform relays `rustproof verdict` output; it never computes a verdict itself |
 | Toolchain image | `images/toolchain` | The platform's worker image builds `FROM` it |
 
-Authentication: `rustproof login` runs the platform's OAuth flow (authorization code + PKCE with a loopback redirect, or `--device` for a device-code flow) against the platform's authorization server (WorkOS AuthKit, with GitHub as the sign-in); the CLI keeps that token in the OS keychain and never sees a GitHub token. `RUSTPROOF_TOKEN` overrides it for CI. The plugin's remote MCP entry gets its header from `rustproof auth header`.
+Authentication: `rustproof login` runs the platform's OAuth flow (authorization code + PKCE with a loopback redirect, or `--device` for a device-code flow) against the platform's authorization server (WorkOS AuthKit, with GitHub as the sign-in); the CLI keeps that token in the OS keychain and never sees a GitHub token. `RUSTPROOF_TOKEN` overrides it for CI. The plugin has no remote MCP entry (§8.9); other MCP clients that connect to the platform's server directly can get the header from `rustproof auth header`.
 
 The platform's base URL defaults to `https://api.rustproof.dev` and is overridable with `RUSTPROOF_API_URL`, so the CLI works against staging and, later, self-hosted platforms.
 
@@ -602,7 +601,7 @@ Milestone numbers are shared with the platform spec so cross-references hold. M3
 
 | # | Milestone | Done when |
 | --- | --- | --- |
-| M0 | Toolchain spike | Pinned toolchain image builds; hand-written iterative `fib` → Charon → Aeneas → Lean; hand proof of `fib_spec` checks with `--prover manual`; `#print axioms` shows only the three standard axioms. Charon's opaque marking confirmed on a crate with an I/O function, and the generated declaration for the opaque callee whitelists cleanly. `--prover leanstral-api` proves `fib_spec` from the hosted endpoint; record pass rates with and without the brick's template. |
+| M0 | Toolchain spike | Pinned toolchain image builds; hand-written iterative `fib` → Charon → Aeneas → Lean; hand proof of `fib_spec` checks with `--prover manual`; `#print axioms` shows only the three standard axioms. Charon's opaque marking confirmed on a crate with an I/O function, and the generated declaration for the opaque callee whitelists cleanly. The configured prover endpoint is probed and the result recorded: with a working endpoint (self-hosted or other), `fib_spec` pass rates are measured with and without the brick's template; otherwise the record says "no hosted Leanstral available; manual used". |
 | M1 | Vertical slice on `examples/fib-rs` | All M1 criteria below pass locally, offline except for the prover call |
 | M2 | Claude Code plugin and mod | All M2 criteria below pass in a fresh Claude Code session |
 | M6 | Dogfood: rustproof proves rustproof | All M6 criteria below pass on this repo |
@@ -622,7 +621,7 @@ Milestone numbers are shared with the platform spec so cross-references hold. M3
 - [ ] Approving continues the pipeline from where it stopped, including after the CLI process was killed
 - [ ] Every primitive runs under the step protocol: `rustproof step <name> --json` with the same input twice returns the same output and reports a cache hit the second time
 - [ ] Killing `rustproof init` mid-run and running it again resumes from the last completed step without repeating it (step cache hits)
-- [ ] `rustproof check` passes with a proof from `--prover leanstral-api` (or `manual` if the API is unavailable; record which)
+- [ ] `rustproof check` passes with a proof from `--prover manual`, or from `agent` or `leanstral-api` when a working endpoint is configured; record which
 - [ ] `rustproof check` fails (exit 2) when a `sorry` is inserted, and when a new `axiom` is added
 - [ ] Editing `fib` in the source marks it `stale`, and `rustproof build` refuses (exit 4)
 - [ ] Without the guard, the counterexample search reports `fib(94)`
@@ -669,7 +668,7 @@ Criteria:
 
 - [ ] `rustproof init` on the rustproof workspace classifies every `rustproof-core` function as `provable` with an empty patch
 - [ ] Approved specs include: a function is `proven` only if its spec is approved and its proof checked; a source-hash mismatch always yields `stale`; any `sorry` or disallowed axiom always fails policy; any `failing`, `counterexample`, or `stale` obligation never yields `success`
-- [ ] All `rustproof-core` obligations are `proven`, and released CLI and worker binaries are built from the proven tree
+- [ ] All `rustproof-core` obligations are `proven`, and released CLI binaries are built from the proven tree
 - [ ] The landing page demo uses this repo as its example
 
 ---
@@ -679,7 +678,7 @@ Criteria:
 ```markdown
 # rustproof
 
-Read docs/rustproof-spec.md before starting any task. Key rules:
+Read design-docs/rustproof-spec.md before starting any task. Key rules:
 
 - Build Milestone 1 (examples/fib-rs) end to end, offline, before generalizing.
 - Every command except login, --prover platform and beads sync must work without an account.
