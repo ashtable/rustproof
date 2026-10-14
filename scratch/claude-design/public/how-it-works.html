@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works — rustproof</title>
+<meta name="description" content="The pipeline, the proof boundary, the status vocabulary.">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="site.css">
+<script src="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/_ds_bundle.js"></script>
+<script src="../shared/rp.js"></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main><section class="wrapx phero"><span class="eyebrow">How it works</span><h1>Rust → Charon → Aeneas → Lean → Leanstral → kernel.</h1><p>rustproof takes a Rust crate, finds the functions whose behavior can be proven, patches them at build time into the subset Aeneas accepts, extracts to Lean 4, proposes theorems in plain English and Lean, generates proofs with Leanstral, and checks every proof with the Lean kernel.</p><div class="ctas" style="margin-top:8px"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="bricks.html">Bricks</a></div></section><section class="sec "><div class="wrapx"><div class="sechead rv"><span class="num">01 / THE PIPELINE</span><h2>Twelve idempotent steps, keyed by content hash.</h2></div><div class="pipe rv"><div class="nd"><span class="k">1 · scan</span><b>Classify</b><span>provable, patchable, excluded</span></div><div class="nd"><span class="k">2 · rank</span><b>Prioritize</b><span>how provable, how important</span></div><div class="nd hl"><span class="k">3 · patch</span><b>Apply bricks</b><span>before/after diffs</span></div><div class="nd"><span class="k">4 · extract</span><b>Charon → Aeneas</b><span>MIR → LLBC → Lean 4</span></div><div class="nd"><span class="k">5 · propose</span><b>Theorems</b><span>English first, Lean second</span></div><div class="nd"><span class="k">6 · prove</span><b>Leanstral</b><span>parallel search, in the cloud</span></div><div class="nd hl"><span class="k">7 · check</span><b>Lean kernel</b><span>no sorry, allowed axioms only</span></div><div class="nd"><span class="k">8 · mutate</span><b>Weak-spec detection</b><span>a surviving mutant flags the spec</span></div><div class="nd"><span class="k">9 · counterexample</span><b>Find the input</b><span>property search, fuzzing</span></div><div class="nd"><span class="k">10 · build</span><b>Patched tree</b><span>overflow checks on</span></div><div class="nd"><span class="k">11 · test</span><b>Differential + yours</b><span>on the patched build</span></div><div class="nd"><span class="k">12 · report</span><b>Every surface</b><span>pane, PR, dashboard, CLI</span></div></div></div></section><section class="sec "><div class="wrapx"><div class="sechead rv"><span class="num">02 / THE PROOF BOUNDARY</span><h2>I/O is a boundary, not a blocker.</h2></div><div class="twocol"><div class="prose rv"><h3>What gets proven</h3><p>Pure, deterministic, typed functions: validation, parsing, pricing and scoring rules, data transformations, numeric kernels, state machines. In a well-structured crate, this is most of the logic.</p><h3>What’s excluded</h3><p>I/O, network, filesystem, clocks, randomness, global mutable state, concurrency and async, unsafe code, FFI, and anything that depends on library types Aeneas has no model for and no brick can replace. Excluded functions are visible in every surface, with the reason.</p></div><div class="prose rv"><h3>Overflow</h3><p>Aeneas models arithmetic so that overflow is a failure, matching Rust’s debug builds. Release builds wrap silently. The patched build sets <code>overflow-checks = true</code>, so the shipped binary matches the model everywhere, and a theorem’s precondition is exactly the set of inputs on which the code doesn’t fail.</p><h3>Where it lives</h3><pre class="code" style="padding:12px 14px;font:var(--rp-type-code-sm)">.rustproof/
+  manifest.toml   obligations, hashes, bricks, approvals
+  patches/        one patch per obligation (may be empty)
+  specs/          theorem statements (CODEOWNERS)
+  proofs/         generated proofs
+  lean/           Lake project; Generated/ is Aeneas output
+  state/          local step cache (never committed)</pre></div></div></div></section><section class="sec" id="status"><div class="wrapx"><div class="sechead rv"><span class="num">03 / STATUS VOCABULARY</span><h2>One set of states, every surface.</h2><p>Glyphs carry the meaning on their own, so every surface works without color, including GitHub Markdown and plain terminals.</p></div><table class="tbl rv"><thead><tr><th>State</th><th>Meaning</th><th>Who acts</th></tr></thead><tbody>
+<tr><td><span class="st" data-s="proven"><span class="g">●</span>Proven</span></td><td>Spec approved, proof checked by the Lean kernel, against the current patched tree</td><td>No one</td></tr>
+<tr><td><span class="st" data-s="checking"><span class="g">◌</span>Checking / Searching</span></td><td>Verification, proof search or repair running</td><td>System</td></tr>
+<tr><td><span class="st" data-s="needs_review"><span class="g">◆</span>Needs review</span></td><td>A spec, or a patch that requires approval, is waiting for a person</td><td>Human</td></tr>
+<tr><td><span class="st" data-s="failing"><span class="g">✕</span>Failing / Counterexample</span></td><td>Proof doesn’t check and repair hasn’t succeeded; or a concrete input breaks the claim</td><td>Agent, then human</td></tr>
+<tr><td><span class="st" data-s="weak_spec"><span class="g">△</span>Weak spec</span></td><td>Spec still holds for a mutant</td><td>Human</td></tr>
+<tr><td><span class="st" data-s="stale"><span class="g">↻</span>Stale</span></td><td>The function changed since it was patched or proven</td><td>System (re-patch, re-prove)</td></tr>
+<tr><td><span class="st" data-s="excluded"><span class="g">○</span>Excluded</span></td><td>Outside the proof boundary, with a reason</td><td>No one</td></tr></tbody></table></div></section><section class="cta-band"><div class="wrapx" style="display:grid;gap:18px;justify-items:center"><h2>See it on your own crate.</h2><p>init reports how much is provable as-is, how much with patches, and what is excluded and why.</p><div class="ctas" style="margin:0;justify-content:center"><span class="btn btn-primary btn-lg soon" aria-disabled="true" title="Not yet released">Install the Claude Code plugin<span class="tag">coming soon</span></span><a class="btn btn-lg" href="contact.html">Request early access</a></div></div></section></main>
+<div id="site-footer"></div>
+</body>
+</html>

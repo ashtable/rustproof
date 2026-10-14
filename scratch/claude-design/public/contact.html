@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — rustproof</title>
+<meta name="description" content="Talk to Retry AI about rustproof.">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/tokens/primitives.css">
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="site.css">
+<script src="../_ds/rustproof-design-system-1f7585c9-0f1b-42b0-b445-3e0aa3082e98/_ds_bundle.js"></script>
+<script src="../shared/rp.js"></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main><section class="wrapx phero"><span class="eyebrow">Contact</span><h1>Tell us what you are building.</h1><p>Ash reads every message. You will get a reply from ash@autoretryai.com, usually within one business day, and a confirmation in your inbox right away.</p></section><section class="sec tight"><div class="wrapx twocol">
+<form id="contact-form" class="form rv" action="/api/contact" method="post" novalidate>
+<div class="row2"><div class="fld"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required><span class="err"></span></div><div class="fld"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required><span class="err"></span></div></div>
+<div class="row2"><div class="fld"><label for="f-company">Company</label><input id="f-company" name="company" autocomplete="organization"></div><div class="fld"><label for="f-role">Role</label><select id="f-role" name="role"><option value="">Choose one</option><option>Developer</option><option>Engineering leader</option><option>Investor</option><option>Other</option></select></div></div>
+<div class="fld"><label for="f-repo">Repo size and language</label><input id="f-repo" name="repo" placeholder="e.g. 40k lines, Rust workspace with 6 crates"></div>
+<div class="fld"><label for="f-message">Message</label><textarea id="f-message" name="message" required></textarea><span class="err"></span></div>
+<div class="fld"><label for="f-heard">How did you hear about us</label><select id="f-heard" name="heard"><option value="">Optional</option><option>Claude Code plugin marketplace</option><option>GitHub</option><option>A colleague</option><option>Talk or podcast</option><option>Search</option><option>Other</option></select></div>
+<div class="hp" aria-hidden="true"><label for="f-website">Website</label><input id="f-website" name="website" tabindex="-1" autocomplete="off"></div>
+<div class="ctas" style="margin:0"><button class="btn btn-primary btn-lg" type="submit">Send</button><span class="t-small c3">Sent through the Twilio Email API to ash@autoretryai.com, with a copy to you.</span></div>
+</form>
+<div id="contact-result" aria-live="polite"></div>
+<aside class="prose rv"><h3 style="margin:0">What happens when you send</h3><p>Two emails go out from <code>ash@autoretryai.com</code>: a notification to Ash with everything you typed, and a confirmation to you with a copy of your message.</p><p>The page posts JSON to <code>/api/contact</code>. The handler validates the fields, drops anything that filled the hidden honeypot, and makes two calls to Twilio’s Email API. Credentials never reach the browser.</p><p>Prefer email? <a href="mailto:ash@autoretryai.com">ash@autoretryai.com</a>.</p></aside>
+</div></section></main>
+<div id="site-footer"></div>
+</body>
+</html>
